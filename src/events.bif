@@ -1,0 +1,14 @@
+########################################
+## Generated for all the BACNET events #
+########################################
+## c: The connection the BACNET communication is part of.
+## is_orig: True if this reflects originator-side activity.
+## bvlc_function: look at consts.bro
+## bvlc_len: total length of payload
+## rest_of_data: value of bytestring &restofdata;
+## 
+event bacnet%(c: connection, is_orig: bool,
+                bvlc_function: count,
+                bvlc_len: count,
+                rest_of_data: string
+                %);
