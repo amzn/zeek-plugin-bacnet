@@ -32,4 +32,5 @@ USER root
 RUN pip install zkg
 RUN zkg autoconfig
 COPY [--chown=bro:bro] . /tmp/zeek-bacnet
-
+WORKDIR /tmp/zeek-bacnet
+RUN zkg install .
