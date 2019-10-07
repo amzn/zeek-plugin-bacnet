@@ -1,6 +1,6 @@
 ## Zeek Plugin BACnet
 
-Zeek network security monitor plugin that enables parsing of the [BACnet](http://www.bacnet.org/) standard building controls protocol. When running as part of your Zeek installation this plugin will produce a `bacnet.log` file containing metadata extracted from any BACnet traffic observed on UDP port 47808.
+When running as part of your Zeek installation this plugin will produce a `bacnet.log` file containing metadata extracted from any [BACnet](http://www.bacnet.org/) traffic observed on UDP port 47808.
 
 ## Installation and Usage
 
