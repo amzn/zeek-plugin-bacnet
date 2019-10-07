@@ -8,4 +8,4 @@ Zeek network security monitor plugin that enables parsing of the [BACnet](http:/
 
 ## Sharing and Contributing
 
-This code is made available under the [BSD-3-Clause license](LICENSE). [Guidleines for contribuing](CONTRIBUTING.md) are available as well as a [pull request template](.github/PULL_REQUEST_TEMPLATE.md). A [Dockerfile](Dockerfile) has been included in the repository to assist with setting up an environment for testing any changes to the plugin.
+This code is made available under the [BSD-3-Clause license](LICENSE). [Guidelines for contribuing](CONTRIBUTING.md) are available as well as a [pull request template](.github/PULL_REQUEST_TEMPLATE.md). A [Dockerfile](Dockerfile) has been included in the repository to assist with setting up an environment for testing any changes to the plugin.
