@@ -1,8 +1,8 @@
-## Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-## SPDX-License-Identifier: BSD-3-Clause
+##! Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+##! SPDX-License-Identifier: BSD-3-Clause
 
-##! Implements base functionality for Bacnet analysis.
-##! Generates the Bacnet.log file, containing some information about the Bacnet headers.
+##! Implements base functionality for BACnet analysis.
+##! Generates the bacnet.log file, containing some information about the BACnet headers.
 
 module Bacnet;
 
@@ -43,6 +43,32 @@ const ports = {
 redef likely_server_ports += {
     ports
     };
+
+##!======================================================
+##! convert bytes not covered in bytestring_to_count
+##!======================================================
+function bytes_to_count(len: count, input: string): count {
+    local number: count = 0;
+    switch(len) {
+        case 3:
+            number = bytestring_to_count(input[0])*(0x010000) + bytestring_to_count(input[1:3]);
+            break;
+        case 5:
+            number = bytestring_to_count(input[0])*(0x0100000000) + bytestring_to_count(input[1:5]);
+            break;
+        case 6:
+            number = bytestring_to_count(input[0])*(0x010000000000) + bytestring_to_count(input[1])*(0x0100000000) + bytestring_to_count(input[2:6]);
+            break;
+        case 7:
+            number = bytestring_to_count(input[0])*(0x01000000000000) + bytestring_to_count(input[1])*(0x010000000000) + bytestring_to_count(input[2])*(0x0100000000) + bytestring_to_count(input[3:7]);
+            break;
+        default:
+            number = bytestring_to_count(input);
+            break;
+        }        
+        
+    return number;
+    }
 
 event zeek_init() &priority=5 {
     Log::create_stream(Bacnet::Log_BACNET,
@@ -150,7 +176,7 @@ event bacnet(c:connection, is_orig:bool,
                             len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                             rest_of_data_index += 1;
                             if (serviceChoice == 0x08) {
-                                data[data_index] = fmt("low_limit=%d", bytestring_to_count(rest_of_data[rest_of_data_index:rest_of_data_index+len]));
+                                    data[data_index] = fmt("low_limit=%d", bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]));
                                 }
                             else {
                                 data[data_index] = fmt("date=%s %d/%d/%d", timesync_dow[bytestring_to_count(rest_of_data[rest_of_data_index+3])],
@@ -163,7 +189,7 @@ event bacnet(c:connection, is_orig:bool,
                             len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                             rest_of_data_index += 1;
                             if (serviceChoice == 0x08) {
-                                data[data_index] = fmt("high_limit=%d", bytestring_to_count(rest_of_data[rest_of_data_index:rest_of_data_index+len]));
+                                data[data_index] = fmt("low_limit=%d", bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]));
                                 }
                             else {
                                 data[data_index] = fmt("time=%d:%02d:%02d.%d", bytestring_to_count(rest_of_data[rest_of_data_index]),
