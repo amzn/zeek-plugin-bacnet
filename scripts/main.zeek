@@ -1,18 +1,14 @@
 ##! Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 ##! SPDX-License-Identifier: BSD-3-Clause
 
-##! Implements base functionality for BACnet analysis.
-##! Generates the bacnet.log file, containing some information about the BACnet headers.
+##! Implements base functionality for Bacnet analysis.
+##! Generates the Bacnet.log file, containing some information about the Bacnet headers.
 
 module Bacnet;
 
 export {
     redef enum Log::ID += {
-        Log_BACNET,
-        Log_BACNET_NPDU,
-        Log_BACNET_Original_Unicast_NPDU,
-        Log_BACNET_Forwarded_Distribute_Original_Broadcast_NPDU,
-        Log_BACNET_Register_Foreign_Device
+        Log_BACNET
         };
     
     ## header info
@@ -121,7 +117,14 @@ event bacnet(c:connection, is_orig:bool,
             rest_of_data_index += 1;
             local control: count = bytestring_to_count(rest_of_data[rest_of_data_index]);
             rest_of_data_index += 1;
-            if (control == 0x08 ||
+            ##! Network Service Data Unit
+            if (control == 0x80) {
+                local network_layer_message_type = bytestring_to_count(rest_of_data[rest_of_data_index]);
+                rest_of_data_index += 1;
+                data[data_index] = fmt("%s", network_layer_messages[network_layer_message_type]);
+                break;
+                }
+            else if (control == 0x08 ||
                 control == 0x0c ||
                 control == 0x20 ||
                 control == 0x24 ||
