@@ -1,6 +1,3 @@
-## Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-## SPDX-License-Identifier: BSD-3-Clause
-
 module Bacnet;
 
 export {
@@ -573,6 +570,32 @@ export {
         [6] = "Saturday",
         [7] = "Sunday",
         } &default=function(i: count):string { return fmt("timesync_dow (%x)", i); } &redef;
+
+    ## BACnet network layer messages: http://www.bacnetwiki.com/wiki/index.php?title=Network_Layer_Message_Type
+    const network_layer_messages = {
+        [0] = "Who-Is-Router-To-Network",
+        [1] = "I-Am-Router-To-Network",
+        [2] = "I-Could-Be-Router-To-Network",
+        [3] = "Reject-Message-To-Network",
+        [4] = "Router-Busy-To-Network",
+        [5] = "Router-Available-To-Network",
+        [6] = "Initialize-Routing-Table",
+        [7] = "Initialize-Routing-Table-Ack",
+        [8] = "Establish-Connection-To-Network",
+        [9] = "Disconnect-Connection-To-Network",
+        [10] = "Challenge-Request",
+        [11] = "Security-Payload",
+        [12] = "Security-Response",
+        [13] = "Request-Key-Update",
+        [14] = "Update-Key-Set",
+        [15] = "Update-Distribution-Key",
+        [16] = "Request-Master-Key",
+        [17] = "Set-Master-Key",
+        [18] = "What-Is-Network-Number",
+        [19] = "Network-Number-Is",
+        [20] = "Reserved for Use by ASHRAE",
+        [128] = "Vendor Proprietary Message",
+        } &default=function(i: count):string { return fmt("network_layer_message (%x)", i); } &redef;
 
     ## vendors
     const vendors = {    
