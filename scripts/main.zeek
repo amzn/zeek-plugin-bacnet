@@ -2,7 +2,7 @@
 ##! SPDX-License-Identifier: BSD-3-Clause
 
 ##! Implements base functionality for Bacnet analysis.
-##! Generates the Bacnet.log file, containing some information about the Bacnet headers.
+##! Generates the bacnet.log file, containing some information about the Bacnet headers.
 
 module Bacnet;
 
@@ -91,21 +91,21 @@ event bacnet(c:connection, is_orig:bool,
     local rest_of_data_len = |rest_of_data|;
     local rest_of_data_index: count = 0;
     switch(bvlc_function) {
-        case 0x00: ##! BVLC_RESULT
+        case 0x00:  ##! BVLC_RESULT
             data[data_index] = fmt("result=%s", results[bytestring_to_count(rest_of_data[0:2])]);
             break;
-        case 0x05: ##! REGISTER_FOREIGN_DEVICE
+        case 0x05:  ##! REGISTER_FOREIGN_DEVICE
             data[data_index] = fmt("ttl=%d", bytestring_to_count(rest_of_data[0:2]));
             break;
-        case 0x01, ##! WRITE_BROADCAST_DISTRIBUTION_TABLE
-            0x02, ##! READ_BROADCAST_DISTRIBUTION_TABLE
-            0x03: ##! READ_BROADCAST_DISTRIBUTION_TABLE_ACK
+        case 0x01,  ##! WRITE_BROADCAST_DISTRIBUTION_TABLE
+            0x02,   ##! READ_BROADCAST_DISTRIBUTION_TABLE
+            0x03:   ##! READ_BROADCAST_DISTRIBUTION_TABLE_ACK
             
             break;
-        case 0x04, ##! FORWARDED_NPDU
-            0x09, ##! DISTRIBUTE_BROADCAST_TO_NETWORK
-            0x0a, ##! ORIGINAL_UNICAST_NPDU
-            0x0b: ##! ORIGINAL_BROADCAST_NPDU
+        case 0x04,  ##! FORWARDED_NPDU
+            0x09,   ##! DISTRIBUTE_BROADCAST_TO_NETWORK
+            0x0a,   ##! ORIGINAL_UNICAST_NPDU
+            0x0b:   ##! ORIGINAL_BROADCAST_NPDU
             if (bvlc_function == 0x04) {
                 ##! local ip: count = count_to_v4_addr(bytestring_to_count(rest_of_data[rest_of_data_index: rest_of_data_index+4]));
                 rest_of_data_index += 4;
@@ -153,26 +153,54 @@ event bacnet(c:connection, is_orig:bool,
             rest_of_data_index += 1;
             local apduType: count = apdu_type / 16;
             c$bacnet$apdu_type = apdu_types[apduType];
+            local apduFlags: count = 0;
             if (apduType == 0) {
                 rest_of_data_index += 1; ##! maximum APDU accepted
                 }
             if (apduType != 1) {
-                ##! c$bacnet$pdu_flags = apdu_type % 8;
+                apduFlags = apdu_type % 16;
                 rest_of_data_index += 1; ##! invoke ID
+                if (apduFlags > 2) {
+                    rest_of_data_index += 1; ##! sequence number
+                    rest_of_data_index += 1; ##! proposed window size
+                    }
                 }
             local serviceChoice: count = bytestring_to_count(rest_of_data[rest_of_data_index]);
             rest_of_data_index += 1;
             local len: count = 0;
+            local identifier_info: count = 0;
+            local object_type: count = 0;
+            local instance_number: count = 0;
+            local value: count = 0;
             switch (apduType) {
-                case 1:     ##! UNCONFIRMED_SERVICE_REQUEST
+                case 0x01: ##! UNCONFIRMED_SERVICE_REQUEST
                     c$bacnet$service_choice = unconfirmed_services[serviceChoice];
                     switch(serviceChoice) {
-                        case 0x00:    ##! i am
-                            
+                        case 0x00:  ##! i am
+                            len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                            rest_of_data_index += 1;
+                            identifier_info = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
+                            ##! 22b shift/bitwise
+                            object_type = identifier_info / 4194304;
+                            instance_number = identifier_info % 4194304;
+                            rest_of_data_index += len;
+                            ##! max apdu length accepted
+                            len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                            rest_of_data_index += 1;
+                            rest_of_data_index += len;
+                            ##! segmentation
+                            len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                            rest_of_data_index += 1;
+                            rest_of_data_index += len;
+                            ##! vendor id
+                            len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                            rest_of_data_index += 1;
+                            data[data_index] = fmt("vendor=%s", vendors[bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len])]);
+                            rest_of_data_index += len;
                             break;
-                        case 0x06,    ##! time synchronization
-                            0x08,     ##! who is
-                            0x09:     ##! UTC time synchronization
+                        case 0x06,  ##! time synchronization
+                            0x08,   ##! who is
+                            0x09:   ##! UTC time synchronization
                             if (rest_of_data_index >= rest_of_data_len) {
                                 break;
                                 }
@@ -200,7 +228,7 @@ event bacnet(c:connection, is_orig:bool,
                                                         bytestring_to_count(rest_of_data[rest_of_data_index+2]),
                                                         bytestring_to_count(rest_of_data[rest_of_data_index+3]));
                                 }
-                            rest_of_data_index += len;                            
+                            rest_of_data_index += len;
                             break;
                         }
                     break;
@@ -209,27 +237,102 @@ event bacnet(c:connection, is_orig:bool,
                 default:
                     c$bacnet$service_choice = confirmed_services[serviceChoice];
                     switch(serviceChoice) {
-                        case 0x02, ##! event notification
-                            0x0c, ##! read property
-                            0x0f, ##! write property
-                            0x1a: ##! read range
-                            if (rest_of_data_index >= rest_of_data_len) {
+                        case 0x02,  ##! event notification
+                            0x0c,   ##! read property
+                            0x0f,   ##! write property
+                            0x1a:   ##! read range
+                            if (rest_of_data_index >= rest_of_data_len || apduFlags > 2) {
                                 break;
+                                }
+                            if (serviceChoice == 0x02) {
+                                ##! process identifier
+                                len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                                rest_of_data_index += 1;
+                                rest_of_data_index += len; ##! PID
                                 }
                             ##! object identifier
                             len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                             rest_of_data_index += 1;
-                            data[data_index] = fmt("object=%s", object_types[bytestring_to_count(rest_of_data[rest_of_data_index:rest_of_data_index+2])/64]);
+                            identifier_info = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
                             rest_of_data_index += len;
+                            ##! 22b shift/bitwise
+                            object_type = identifier_info / 4194304;
+                            instance_number = identifier_info % 4194304;
+                            data[data_index] = fmt("object=%s", object_types[object_type]);
                             data_index += 1;
-                            ##! property identifier
                             len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                             rest_of_data_index += 1;
-                            data[data_index] = fmt("property=%s", property_identifiers[bytestring_to_count(rest_of_data[rest_of_data_index])]);
+                            if (serviceChoice == 0x02) {
+                                identifier_info = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
+                                object_type = identifier_info / 4194304;
+                                instance_number = identifier_info % 4194304;
+                                data[data_index] = fmt("object=%s", object_types[object_type]);
+                                }
+                            else {
+                                local property_identifier: count = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
+                                data[data_index] = fmt("property=%s", property_identifiers[property_identifier]);
+                                }
+                            ##! don't parse list
+                            if ("List" in data[data_index]) {
+                                break;
+                                }
                             rest_of_data_index += len;
+                            data_index += 1;
+                            ##! { bracket
+                            rest_of_data_index += 1;
+                            # get value on ack
+                            if (serviceChoice == 0x0c && (apduType > 1 && apduType < 5)) {
+                                identifier_info = bytestring_to_count(rest_of_data[rest_of_data_index]);
+                                rest_of_data_index += 1;
+                                len = identifier_info % 8;
+                                local data_type: count = identifier_info / 16;
+                                switch(data_type) {
+                                    case 2,  ##! UINT
+                                         9:  ##! ENUMERATION
+                                        value = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
+                                        switch(property_identifier) {
+                                            case 2: ##! action
+                                                data[data_index] = fmt("value=%s", action[value]);
+                                                break;
+                                            case 25: ##! limit enable
+                                                data[data_index] = fmt("value=%s", limit_enable[value]);
+                                                break;
+                                            case 107: ##! segmentation support
+                                                data[data_index] = fmt("value=%s", segmentation_supports[value]);
+                                                break;
+                                            case 112: ##! system status
+                                                data[data_index] = fmt("value=%s", system_statuses[value]);
+                                                break;
+                                            default:
+                                                data[data_index] = fmt("value=%d", value);
+                                                break;
+                                            }
+                                        break;
+                                    case 7,  ##! STRING
+                                         8:  ##! BIT STRING
+                                        ##! extended value
+                                        if (len == 5) {
+                                            len = bytestring_to_count(rest_of_data[rest_of_data_index]);
+                                            rest_of_data_index += 1;
+                                            }
+                                        if (data_type == 7) {
+                                            local char_set: count = bytestring_to_count(rest_of_data[rest_of_data_index]);
+                                            rest_of_data_index += 1;
+                                            data[data_index] = fmt("value=%s", rest_of_data[rest_of_data_index:rest_of_data_index+len-1]);
+                                            }
+                                        else {
+                                            ##! unused bits
+                                            rest_of_data_index += 1;
+                                            data[data_index] = fmt("value=0x%s", string_to_ascii_hex(rest_of_data[rest_of_data_index:rest_of_data_index+len-1]));
+                                            }
+                                        break;
+                                    case 12: ##! OBJECT
+                                        data[data_index] = fmt("value=%d", bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len])%4194304);
+                                        break;
+                                    }
+                                }
                             break;
                         case 0x0e: ##! read property multiple
-                        
                             break;
                         }
                     break;
