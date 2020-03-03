@@ -13,7 +13,7 @@ namespace analyzer {
                 virtual ~BACNET_Analyzer();
 
                 virtual void Done();
-                virtual void DeliverPacket(int len, const u_char* data, bool orig, uint64 seq, const IP_Hdr* ip, int caplen);
+                virtual void DeliverPacket(int len, const u_char* data, bool orig, uint64_t seq, const IP_Hdr* ip, int caplen);
 
                 static analyzer::Analyzer* Instantiate(Connection* conn) { 
                     return new BACNET_Analyzer(conn);

@@ -118,7 +118,8 @@ event bacnet(c:connection, is_orig:bool,
             local control: count = bytestring_to_count(rest_of_data[rest_of_data_index]);
             rest_of_data_index += 1;
             ##! Network Service Data Unit
-            if (control == 0x80) {
+            if (control == 0x80 ||
+                control == 0x81) {
                 local network_layer_message_type = bytestring_to_count(rest_of_data[rest_of_data_index]);
                 rest_of_data_index += 1;
                 data[data_index] = fmt("%s", network_layer_messages[network_layer_message_type]);
