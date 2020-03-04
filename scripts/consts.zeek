@@ -1,3 +1,6 @@
+## Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+## SPDX-License-Identifier: BSD-3-Clause
+
 module Bacnet;
 
 export {

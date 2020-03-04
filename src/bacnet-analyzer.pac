@@ -1,3 +1,6 @@
+## Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+## SPDX-License-Identifier: BSD-3-Clause
+
 connection BACNET_Conn(bro_analyzer: BroAnalyzer) {
     upflow   = BACNET_Flow(true);
     downflow = BACNET_Flow(false);
