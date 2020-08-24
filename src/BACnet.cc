@@ -1,21 +1,21 @@
-#include "BACNET.h"
+#include "BACnet.h"
 #include "events.bif.h"
 
 using namespace analyzer::bacnet;
 
-BACNET_Analyzer::BACNET_Analyzer(Connection* c): analyzer::Analyzer("BACNET", c) {
-    interp = new binpac::BACNET::BACNET_Conn(this);
+BACnet_Analyzer::BACnet_Analyzer(Connection* c): analyzer::Analyzer("BACnet", c) {
+    interp = new binpac::BACnet::BACnet_Conn(this);
     }
 
-BACNET_Analyzer::~BACNET_Analyzer() {
+BACnet_Analyzer::~BACnet_Analyzer() {
     delete interp;
     }
 
-void BACNET_Analyzer::Done() {
+void BACnet_Analyzer::Done() {
     Analyzer::Done();
     }
 
-void BACNET_Analyzer::DeliverPacket(int len, const u_char* data, bool orig, uint64_t seq, const IP_Hdr* ip, int caplen) {
+void BACnet_Analyzer::DeliverPacket(int len, const u_char* data, bool orig, uint64_t seq, const IP_Hdr* ip, int caplen) {
     Analyzer::DeliverPacket(len, data, orig, seq, ip, caplen);
 
     try {

@@ -1,18 +1,18 @@
 ##! Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 ##! SPDX-License-Identifier: BSD-3-Clause
 
-##! Implements base functionality for Bacnet analysis.
-##! Generates the bacnet.log file, containing some information about the Bacnet headers.
+##! Implements base functionality for BACnet analysis.
+##! Generates the bacnet.log file, containing some information about the BACnet headers.
 
-module Bacnet;
+module BACnet;
 
 export {
     redef enum Log::ID += {
-        Log_BACNET
+        Log_BACnet
         };
     
     ## header info
-    type BACNET: record {
+    type BACnet: record {
         ts              : time &log;                ## Timestamp for when the event happened.
         uid             : string &log;              ## Unique ID for the connection.
         id              : conn_id &log;             ## The connection's 4-tuple of endpoint addresses/ports.
@@ -25,11 +25,11 @@ export {
         data            : string_vec &optional &log;
         };
     ## Event that can be handled to access the record as it is sent
-    global log_bacnet: event(rec: BACNET);
+    global log_bacnet: event(rec: BACnet);
     }
 
 redef record connection += {
-    bacnet: BACNET &optional;
+    bacnet: BACnet &optional;
     };
 
 ## define listening ports
@@ -67,8 +67,8 @@ function bytes_to_count(len: count, input: string): count {
     }
 
 event zeek_init() &priority=5 {
-    Log::create_stream(Bacnet::Log_BACNET,
-                        [$columns=BACNET,
+    Log::create_stream(BACnet::Log_BACnet,
+                        [$columns=BACnet,
                         $ev=log_bacnet,
                         $path="bacnet"]);
     Analyzer::register_for_ports(Analyzer::ANALYZER_BACNET, ports);
@@ -235,6 +235,19 @@ event bacnet(c:connection, is_orig:bool,
                     break;
                 case 0x04: ##! segment ack
                     break;
+                case 0x05: ##! error
+                    c$bacnet$service_choice = confirmed_services[serviceChoice];
+                    ##! error class
+                    len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                    rest_of_data_index += 1;
+                    data[data_index] = fmt("class=%s", error_classes[bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len])]);
+                    data_index += 1;
+                    rest_of_data_index += len;
+                    ##! error code
+                    len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
+                    rest_of_data_index += 1;
+                    data[data_index] = fmt("code=%s", error_codes[bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len])]);
+                    break;
                 default:
                     c$bacnet$service_choice = confirmed_services[serviceChoice];
                     switch(serviceChoice) {
@@ -344,7 +357,7 @@ event bacnet(c:connection, is_orig:bool,
     }
     c$bacnet$data = data;
     
-    Log::write(Log_BACNET, c$bacnet);
+    Log::write(Log_BACnet, c$bacnet);
     delete c$bacnet;
     }
 

@@ -2,10 +2,10 @@
 #define ZEEK_PLUGIN_ZEEK_BACNET
 
 #include <plugin/Plugin.h>
-#include "BACNET.h"
+#include "BACnet.h"
 
 namespace plugin {
-    namespace Zeek_BACNET {
+    namespace Zeek_BACnet {
         class Plugin : public ::plugin::Plugin {
             protected:
                 // Overridden from plugin::Plugin.

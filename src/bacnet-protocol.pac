@@ -26,30 +26,30 @@ enum bvlc_functions {
 ##        RECORD TYPES       #
 ##############################
 
-type BACNET_PDU(is_orig: bool) = case (is_orig) of {
-    true  -> request    : BACNET_Request;
-    false -> response   : BACNET_Response;
+type BACnet_PDU(is_orig: bool) = case (is_orig) of {
+    true  -> request    : BACnet_Request;
+    false -> response   : BACnet_Response;
     } &byteorder=bigendian;
 
 # switch for the request portion
-type BACNET_Request = record {
+type BACnet_Request = record {
     header  : BVLC;
     data    : case (header.header) of {
-                BACNET_IDENTIFIER   -> bacnetHeaderVerify   : BACNET_Command(header);
+                BACNET_IDENTIFIER   -> bacnetHeaderVerify   : BACnet_Command(header);
                 default             -> unknown              : bytestring &restofdata;
                 };
     } &byteorder=bigendian;
 
 # switch for the response portion
-type BACNET_Response = record {
+type BACnet_Response = record {
     header  : BVLC;
     data    : case (header.header) of {
-                BACNET_IDENTIFIER   -> bacnetHeaderVerify   : BACNET_Command(header);
+                BACNET_IDENTIFIER   -> bacnetHeaderVerify   : BACnet_Command(header);
                 default             -> unknown              : bytestring &restofdata;
                 };
     } &byteorder=bigendian;
 
-##! BACNET Virtual Link Control (BVLC)
+##! BACnet Virtual Link Control (BVLC)
 type BVLC = record {
     header          : uint8; ##! header
     bvlc_function   : uint8; ##! function identifier
@@ -57,7 +57,7 @@ type BVLC = record {
     } &byteorder=bigendian;
 
 # switch for the bvlc type
-type BACNET_Command(header: BVLC) = case (header.bvlc_function) of  {
+type BACnet_Command(header: BVLC) = case (header.bvlc_function) of  {
     BVLC_RESULT,
     WRITE_BROADCAST_DISTRIBUTION_TABLE,
     READ_BROADCAST_DISTRIBUTION_TABLE,
@@ -67,11 +67,11 @@ type BACNET_Command(header: BVLC) = case (header.bvlc_function) of  {
     FORWARDED_NPDU,
     DISTRIBUTE_BROADCAST_TO_NETWORK,
     ORIGINAL_BROADCAST_NPDU,
-    SECURE_BVLL -> bacnet    : BACNET(header);
+    SECURE_BVLL -> bacnet    : BACnet(header);
     default     -> unknown   : bytestring &restofdata;
     };
 
 ##! everything here
-type BACNET(header: BVLC) = record {
+type BACnet(header: BVLC) = record {
     rest_of_data : bytestring &restofdata;
     } &byteorder=bigendian;

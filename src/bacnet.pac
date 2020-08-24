@@ -5,9 +5,9 @@
     #include "events.bif.h"
     %}
 
-analyzer BACNET withcontext {
-    connection:    BACNET_Conn;
-    flow:        BACNET_Flow;
+analyzer BACnet withcontext {
+    connection: BACnet_Conn;
+    flow:       BACnet_Flow;
     };
 
 %include bacnet-protocol.pac

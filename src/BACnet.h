@@ -7,22 +7,22 @@
 
 namespace analyzer {
     namespace bacnet {
-        class BACNET_Analyzer : public analyzer::Analyzer {
+        class BACnet_Analyzer : public analyzer::Analyzer {
             public:
-                BACNET_Analyzer(Connection* conn);
-                virtual ~BACNET_Analyzer();
+                BACnet_Analyzer(Connection* conn);
+                virtual ~BACnet_Analyzer();
 
                 virtual void Done();
                 virtual void DeliverPacket(int len, const u_char* data, bool orig, uint64_t seq, const IP_Hdr* ip, int caplen);
 
                 static analyzer::Analyzer* Instantiate(Connection* conn) { 
-                    return new BACNET_Analyzer(conn);
+                    return new BACnet_Analyzer(conn);
                     }
 
             protected:
-                binpac::BACNET::BACNET_Conn* interp;
+                binpac::BACnet::BACnet_Conn* interp;
             };
-        } 
+        }
     }
 
 #endif

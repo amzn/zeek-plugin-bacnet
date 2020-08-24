@@ -2,9 +2,9 @@
 ## SPDX-License-Identifier: BSD-3-Clause
 
 ########################################
-## Generated for all the BACNET events #
+## Generated for all the BACnet events #
 ########################################
-## c: The connection the BACNET communication is part of.
+## c: The connection the BACnet communication is part of.
 ## is_orig: True if this reflects originator-side activity.
 ## bvlc_function: look at consts.bro
 ## bvlc_len: total length of payload
