@@ -49,7 +49,7 @@ export {
         [4] = "Segment Acknowledge",
         [5] = "Error",
         [6] = "Reject",
-        [7] = "Abort ABORT"
+        [7] = "Abort",
         } &default=function(i: count):string { return fmt("apdu_type (%x)", i); } &redef;
 
     ## BACnet service choices
@@ -546,6 +546,7 @@ export {
     const limit_enable = {
         [1] = "Event Low Limit Enable",
         [2] = "Event High Limit Enable",
+        [3] = "Event Both Limits Enable",
         } &default=function(i: count):string { return fmt("limit_enable (%x)", i); } &redef;
 
     ## BACnet action
@@ -562,6 +563,9 @@ export {
 
     ## BACnet segmentations
     const segmentation_supports = {
+        [0] = "Segmented Both",
+        [1] = "Segmented Transmit",
+        [2] = "Segmented Receive",
         [3] = "No Segmentation",
         } &default=function(i: count):string { return fmt("segmentation (%x)", i); } &redef;
 
@@ -756,6 +760,36 @@ export {
         [137] = "Duplicate Entry",
         [138] = "Invalid Value In This State",
         } &default=function(i: count):string { return fmt("error_code (%x)", i); } &redef;
+
+    ## reject reasons
+    const rejects = {
+        [0] = "Other",
+        [1] = "Buffer Overflow",
+        [2] = "Inconsistent Parameters",
+        [3] = "Invalid Parameter Data Type",
+        [4] = "Invalid Tag",
+        [5] = "Missing Required Parameter",
+        [6] = "Parameter Out Of Range",
+        [7] = "Too Many Arguments",
+        [8] = "Undefined Enumeration",
+        [9] = "Unrecognized Service",
+        } &default=function(i: count):string { return fmt("reject (%x)", i); } &redef;
+
+    ## abort reasons
+    const aborts = {
+        [0] = "Other",
+        [1] = "Buffer Overflow",
+        [2] = "Invalid APDU In This State",
+        [3] = "Preempted By Higher Priority Task",
+        [4] = "Segmentation Not Supported",
+        [5] = "Security Error",
+        [6] = "Insufficient Security",
+        [7] = "Window Size Out Of Range",
+        [8] = "Application Exceeded Reply Time",
+        [9] = "Out Of Resources",
+        [10] = "TSM Timeout",
+        [11] = "APDU Too Long",
+        } &default=function(i: count):string { return fmt("abort (%x)", i); } &redef;
 
     ## vendors
     const vendors = {    

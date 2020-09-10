@@ -121,8 +121,45 @@ event bacnet(c:connection, is_orig:bool,
             if (control == 0x80 ||
                 control == 0x81) {
                 local network_layer_message_type = bytestring_to_count(rest_of_data[rest_of_data_index]);
+                data[data_index] = fmt("network_layer_message=%s", network_layer_messages[network_layer_message_type]);
                 rest_of_data_index += 1;
-                data[data_index] = fmt("%s", network_layer_messages[network_layer_message_type]);
+                data_index += 1;
+                ##! type, functiom, blvc len makes up 4
+                bvlc_len -= 4;
+                ##! check if more data to parse
+                if (rest_of_data_index < bvlc_len) {
+                    switch(network_layer_message_type) {
+                        case 0x00: ##! Who Is Router To Network
+                            break;
+                        case 0x01: ##! I Am Router To Network
+                            break;
+                        case 0x02: ##! I Could Be Router To Network
+                            break;
+                        case 0x03, ##! Reject Message To Network
+                            0x04:  ##! Router Busy To Network
+                            if (network_layer_message_type == 0x03) {
+                                ##! could enumerate if available: http://www.bacnet.org/Addenda/Add-135-2010ao.pdf#page=9
+                                data[data_index] = fmt("reason=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                                data_index += 1;
+                                }
+                            local network_numbers: string = "";
+                            while (rest_of_data_index < bvlc_len) {
+                                network_numbers += fmt("%d", bytestring_to_count(rest_of_data[rest_of_data_index: rest_of_data_index+2]));
+                                rest_of_data_index += 2;
+                                if (rest_of_data_index < bvlc_len) {
+                                    network_numbers += ";";
+                                    }
+                                }
+                            data[data_index] = fmt("network_numbers=%s", network_numbers);
+                            break;
+                        case 0x05: ##! Router Available To Network
+                            break;
+                        case 0x06: ##! Initialize Routing Table
+                            break;
+                        case 0x07: ##! Initialize Available To Network
+                            break;
+                        }
+                    }
                 break;
                 }
             else if (control == 0x08 ||
@@ -224,7 +261,7 @@ event bacnet(c:connection, is_orig:bool,
                                 data[data_index] = fmt("low_limit=%d", bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]));
                                 }
                             else {
-                                data[data_index] = fmt("time=%d:%02d:%02d.%d", bytestring_to_count(rest_of_data[rest_of_data_index]),
+                                data[data_index] = fmt("time=%d:%02d:%02d.%02d", bytestring_to_count(rest_of_data[rest_of_data_index]),
                                                         bytestring_to_count(rest_of_data[rest_of_data_index+1]),
                                                         bytestring_to_count(rest_of_data[rest_of_data_index+2]),
                                                         bytestring_to_count(rest_of_data[rest_of_data_index+3]));
@@ -234,6 +271,19 @@ event bacnet(c:connection, is_orig:bool,
                         }
                     break;
                 case 0x04: ##! segment ack
+                    ##! parse data if negative ack is true
+                    if ((apdu_type & 2) > 0) {
+                        ##! from previous increment
+                        rest_of_data_index -= 2;
+                        ##! invoke id
+                        data[data_index] = fmt("invoke_id=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                        data_index += 1;
+                        rest_of_data_index += 1;
+                        data[data_index] = fmt("sequence_number=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                        data_index += 1;
+                        rest_of_data_index += 1;
+                        data[data_index] = fmt("window_size=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                        }
                     break;
                 case 0x05: ##! error
                     c$bacnet$service_choice = confirmed_services[serviceChoice];
@@ -247,6 +297,24 @@ event bacnet(c:connection, is_orig:bool,
                     len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                     rest_of_data_index += 1;
                     data[data_index] = fmt("code=%s", error_codes[bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len])]);
+                    break;
+                case 0x06: ##! reject
+                    ##! from previous increment
+                    rest_of_data_index -= 2;
+                    ##! invoke id
+                    data[data_index] = fmt("invoke_id=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                    data_index += 1;
+                    rest_of_data_index += 1;
+                    data[data_index] = fmt("reason=%d", rejects[bytestring_to_count(rest_of_data[rest_of_data_index])]);
+                    break;
+                case 0x07: ##! abort
+                    ##! from previous increment
+                    rest_of_data_index -= 2;
+                    ##! invoke id
+                    data[data_index] = fmt("invoke_id=%d", bytestring_to_count(rest_of_data[rest_of_data_index]));
+                    data_index += 1;
+                    rest_of_data_index += 1;
+                    data[data_index] = fmt("reason=%d", aborts[bytestring_to_count(rest_of_data[rest_of_data_index])]);
                     break;
                 default:
                     c$bacnet$service_choice = confirmed_services[serviceChoice];
