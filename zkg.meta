@@ -1,5 +1,5 @@
 [package]
-script_dir = scripts
+script_dir = scripts/BACnet
 build_command = ./configure && make
 tags = zeek plugin, protocol analyzer, log writer, ics, bacnet
 description = Plugin that enables parsing of the BACnet standard building controls protocol
