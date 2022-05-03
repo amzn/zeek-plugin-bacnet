@@ -26,6 +26,8 @@ export {
         };
     ## Event that can be handled to access the record as it is sent
     global log_bacnet: event(rec: BACnet);
+
+    global log_policy: Log::PolicyHook;
     }
 
 redef record connection += {
@@ -70,7 +72,8 @@ event zeek_init() &priority=5 {
     Log::create_stream(BACnet::Log_BACnet,
                         [$columns=BACnet,
                         $ev=log_bacnet,
-                        $path="bacnet"]);
+                        $path="bacnet",
+                        $policy=log_policy]);
     Analyzer::register_for_ports(Analyzer::ANALYZER_BACNET, ports);
     }
 
