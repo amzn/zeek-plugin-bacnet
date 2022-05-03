@@ -347,6 +347,7 @@ event bacnet(c:connection, is_orig:bool,
                             data_index += 1;
                             len = bytestring_to_count(rest_of_data[rest_of_data_index]) % 8;
                             rest_of_data_index += 1;
+                            local property_identifier: count;
                             if (serviceChoice == 0x02) {
                                 identifier_info = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
                                 object_type = identifier_info / 4194304;
@@ -354,7 +355,7 @@ event bacnet(c:connection, is_orig:bool,
                                 data[data_index] = fmt("object=%s", object_types[object_type]);
                                 }
                             else {
-                                local property_identifier: count = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
+                                property_identifier = bytes_to_count(len, rest_of_data[rest_of_data_index:rest_of_data_index+len]);
                                 data[data_index] = fmt("property=%s", property_identifiers[property_identifier]);
                                 }
                             ##! don't parse list
